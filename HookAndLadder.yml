@@ -1,6 +1,7 @@
 ---
 - hosts: dnsprime
-  remote_user: root
+  become: yes
+  become_user: root
   vars:
     zonename: puppet.man
     master: 192.168.120.2
@@ -9,17 +10,24 @@
       package:
         name: bind
         state: latest
+        
     - name: copy config file to client
-      copy: src=named.j2 dest=/etc/named.conf
-        owner=root group=named mode=0640
+      template:
+        src: named.j2
+        dest: /etc/named.conf
+        owner: root
+        group: named
+        mode: '0640'
       notify:
        restart named
+       
     - name: make sure named is running
       service:
         name: named
-        state: started
+        state: restarted
+  
   handlers:
     - name: restart named
       service:
         name: named
-        enabled: yes
+        state: restarted
